@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+//import 'package:intl/intl.dart';
 
 import 'supplemental/asymmetric_view.dart';
 
@@ -21,12 +21,14 @@ import 'model/data.dart';
 import 'model/product.dart';
 
 class HomePage extends StatelessWidget {
+
+  final Category category;
+
+  const HomePage({this.category: Category.all});
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: AsymmetricView(products: getProducts(Category.all),),
-    );
+    return AsymmetricView(products: getProducts(category));
   }
 
 //  List<Card> _buildGridCards(BuildContext context) {

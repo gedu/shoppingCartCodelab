@@ -18,6 +18,7 @@ import 'supplemental/cut_corners_border.dart';
 import 'backdrop.dart';
 import 'home.dart';
 import 'login.dart';
+import 'menu_page.dart';
 
 import 'model/product.dart';
 import 'color.dart';
@@ -65,23 +66,9 @@ TextTheme _buildShrineTextTheme(TextTheme base) {
   );
 }
 
-class ShrineApp extends StatelessWidget {
+class ShrineApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Shrine',
-      home: Backdrop(
-        currentCategory: Category.all,
-        frontPanel: HomePage(),
-        backPanel: Container(color: kShrinePink100,),
-        frontTitle: Text('Shrine'),
-        backTitle: Text('Menu'),
-      ),
-      initialRoute: '/login',
-      onGenerateRoute: _getRoute,
-      theme: _kShrineTheme,
-    );
-  }
+  _ShrineAppState createState() => _ShrineAppState();
 
   Route<dynamic> _getRoute(RouteSettings settings) {
     if (settings.name != '/login') {
@@ -92,6 +79,36 @@ class ShrineApp extends StatelessWidget {
       settings: settings,
       builder: (BuildContext context) => LoginPage(),
       fullscreenDialog: true,
+    );
+  }
+}
+
+class _ShrineAppState extends State<ShrineApp> {
+  Category _currentCategory = Category.all;
+
+  void _onCategoryTap(Category category) {
+    setState(() {
+      _currentCategory = category;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Shrine',
+      home: Backdrop(
+        currentCategory: _currentCategory,
+        frontPanel: HomePage(category: _currentCategory),
+        backPanel: MenuPage(
+          currentCategory: _currentCategory,
+          onCategoryTap: _onCategoryTap,
+        ),
+        frontTitle: Text('Shrine'),
+        backTitle: Text('Menu'),
+      ),
+      initialRoute: '/login',
+      onGenerateRoute: widget._getRoute,
+      theme: _kShrineTheme,
     );
   }
 }

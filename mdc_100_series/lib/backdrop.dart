@@ -3,6 +3,8 @@ import 'package:meta/meta.dart';
 
 import 'model/product.dart';
 
+import 'login.dart';
+
 const double _kFlingVelocity = 2.0;
 
 class Backdrop extends StatefulWidget {
@@ -52,20 +54,27 @@ class _BackdropState extends State<Backdrop>
   Widget build(BuildContext context) {
     final appBar = AppBar(
       brightness: Brightness.light,
-      title: Text("Shrine"),
+      title: _BackdropTitle(
+        listenable: _animationController.view,
+        frontTitle: widget.frontTitle,
+        backTitle: widget.backTitle,
+      ),
       elevation: 0.0,
       leading: IconButton(
-        icon: Icon(Icons.menu),
+        icon: AnimatedIcon(
+          icon: AnimatedIcons.close_menu,
+          progress: _animationController.view,
+        ),
         onPressed: _toggleBackdropPanelVisibility,
       ),
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.search),
-          onPressed: () {},
+          onPressed: () => _goToLogin(context),
         ),
         IconButton(
           icon: Icon(Icons.tune),
-          onPressed: () {},
+          onPressed: () => _goToLogin(context),
         ),
       ],
 
@@ -77,6 +86,25 @@ class _BackdropState extends State<Backdrop>
     );
   }
 
+  void _goToLogin(BuildContext context) {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (BuildContext context) => LoginPage()));
+  }
+
+  @override
+  void didUpdateWidget(Backdrop oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.currentCategory != oldWidget.currentCategory) {
+      setState(() {
+        _animationController.fling(velocity:
+        _backdropPanelVisible ? -_kFlingVelocity : _kFlingVelocity);
+      });
+    } else if (!_backdropPanelVisible) {
+      setState(() {
+        _animationController.fling(velocity: _kFlingVelocity);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -90,7 +118,8 @@ class _BackdropState extends State<Backdrop>
     final double panelTop = panelSize.height - panelTitleHeight;
 
     Animation<RelativeRect> panelAnimation = RelativeRectTween(
-      begin: RelativeRect.fromLTRB(0.0, panelTop, 0.0, panelTop - panelSize.height),
+      begin: RelativeRect.fromLTRB(
+          0.0, panelTop, 0.0, panelTop - panelSize.height),
       end: RelativeRect.fromLTRB(0.0, 0.0, 0.0, 0.0),
     ).animate(_animationController.view);
 
@@ -101,7 +130,10 @@ class _BackdropState extends State<Backdrop>
           widget.backPanel,
           PositionedTransition(
             rect: panelAnimation,
-            child: _BackdropPanel(child: widget.frontPanel),
+            child: _BackdropPanel(
+              child: widget.frontPanel,
+              onTap: _toggleBackdropPanelVisibility,
+            ),
           ),
         ],
       ),
@@ -116,7 +148,7 @@ class _BackdropState extends State<Backdrop>
 
   void _toggleBackdropPanelVisibility() {
     _animationController.fling(
-      velocity: _backdropPanelVisible ? -_kFlingVelocity : _kFlingVelocity
+        velocity: _backdropPanelVisible ? -_kFlingVelocity : _kFlingVelocity
     );
   }
 }
@@ -124,10 +156,12 @@ class _BackdropState extends State<Backdrop>
 class _BackdropPanel extends StatelessWidget {
 
   final Widget child;
+  final VoidCallback onTap;
 
   const _BackdropPanel({
     Key key,
     this.child,
+    this.onTap,
   }) : super(key: key);
 
   @override
@@ -139,8 +173,59 @@ class _BackdropPanel extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+
         children: <Widget>[
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onTap,
+            child: Container(
+              height: 40.0,
+              alignment: AlignmentDirectional.centerStart,
+            ),
+          ),
           Expanded(child: child),
+        ],
+      ),
+    );
+  }
+}
+
+class _BackdropTitle extends AnimatedWidget {
+
+  final Widget frontTitle;
+  final Widget backTitle;
+
+  const _BackdropTitle({
+    Key key,
+    Listenable listenable,
+    this.frontTitle,
+    this.backTitle,
+  }) : super(key: key, listenable: listenable);
+
+  @override
+  Widget build(BuildContext context) {
+    final Animation<double> animation = this.listenable;
+
+    return DefaultTextStyle(
+      style: Theme.of(context).primaryTextTheme.title,
+      softWrap: false,
+      overflow: TextOverflow.ellipsis,
+      child: Stack(
+        children: <Widget>[
+          Opacity(
+            opacity: CurvedAnimation(
+              parent: ReverseAnimation(animation),
+              curve: Interval(0.0, 1.0),
+            ).value,
+            child: backTitle,
+          ),
+          Opacity(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Interval(0.0, 1.0),
+            ).value,
+            child: frontTitle,
+          ),
         ],
       ),
     );
