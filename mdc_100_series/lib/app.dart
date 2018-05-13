@@ -15,9 +15,11 @@
 import 'package:flutter/material.dart';
 import 'supplemental/cut_corners_border.dart';
 
+import 'backdrop.dart';
 import 'home.dart';
 import 'login.dart';
 
+import 'model/product.dart';
 import 'color.dart';
 
 final ThemeData _kShrineTheme = _buildShrineTheme();
@@ -68,7 +70,13 @@ class ShrineApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Shrine',
-      home: HomePage(),
+      home: Backdrop(
+        currentCategory: Category.all,
+        frontPanel: HomePage(),
+        backPanel: Container(color: kShrinePink100,),
+        frontTitle: Text('Shrine'),
+        backTitle: Text('Menu'),
+      ),
       initialRoute: '/login',
       onGenerateRoute: _getRoute,
       theme: _kShrineTheme,
